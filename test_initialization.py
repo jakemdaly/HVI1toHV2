@@ -2,6 +2,7 @@ import sys
 sys.path.append('C:/Program Files (x86)/Keysight/SD1/Libraries/Python')
 from abc import ABC, abstractmethod
 import keysightSD1
+import time
 
 # Test initialization and configuration.
 
@@ -63,7 +64,7 @@ class Test_HVItriggersync(Test):
     master_module = None #assigned with call to associate() method
     slave_module = None #assigned with call to associate() method
     waveform = None
-    hvi = None
+    hvi = keysightSD1.SD_HVI()
 
     def __init__(self, module_dict, master_slot, slave_slot, master_channel, slave_channel, master_index=0, slave_index=1):
         super().__init__(module_dict)
@@ -85,9 +86,11 @@ class Test_HVItriggersync(Test):
             else:
                 print("[Error in associate function] Module found in slot that was not specified as master or slave")
 
-    def send_PXI_trigger_pulse(self, PXI_line_nbr):
-        self.master_module.PXItriggerWrite(PXI_line_nbr, 1)
+    def send_PXI_trigger_pulse(self, PXI_line_nbr, delay=.2):
+        time.sleep(delay)
         self.master_module.PXItriggerWrite(PXI_line_nbr, 0)
+        time.sleep(delay)
+        self.master_module.PXItriggerWrite(PXI_line_nbr, 1)
 
     def set_waveform(self, filestr):
         wave = keysightSD1.SD_Wave()
@@ -95,20 +98,26 @@ class Test_HVItriggersync(Test):
         self.waveform = wave
 
     def set_hvi(self, filestr):
-        new_hvi = keysightSD1.SD_HVI()
-        new_hvi.open(filestr)
-        new_hvi.compile()
-        new_hvi.load()
-        self.hvi = new_hvi
+        self.hvi.open(filestr)
+        self.hvi.compile()
+        self.hvi.load()
+        print("Loaded {}.HVI into HVI Trigger Sync Test".format(filestr))
 
 def create_module_inventory(module_array):
-    #Takes array of module locations in format [chassis, slot], and returns a dictionary of modules with specific module type/location information
+    # Takes array of module locations in format [chassis, slot], and returns a dictionary of modules with specific module type & location information
 
     dictionary = {}
 
     for mod in module_array:
         temp_mod = keysightSD1.SD_AOU() #Doesn't matter if it's dig or awg, it will be able to retrieve module name
         module_type = temp_mod.getProductNameBySlot(mod[0], mod[1])
+
+        if module_type < 0:
+            print("[ERROR] Could not find SD instrument at the specified location: Chassis {}, Slot {}".format(mod[0], mod[1]))
+            sys.exit()
+        else:
+            print("Found {} in Chassis {}, Slot {}".format(module_type, mod[0], mod[1]))
+
         name = "{}_chassis{}_slot{}".format(module_type, mod[0], mod[1])
         dictionary.update({name: [mod[0], mod[1]]})
         temp_mod.close()

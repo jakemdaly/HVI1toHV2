@@ -15,11 +15,13 @@ import time
 # Choose which test to run. In this example we will run a trigger example in a single chassis with two modules
 # Tell the test the location of the modules that you want to open (chassis number and slot number)
 
-# Create dictionary from the array and hand this to the test initializer.
+# Create array of module locations [chassis, slot]. Doesn't matter what type of SD1 instrument (dig/awg)
 module_array = [[1, 4], [1, 5]]
+
+# Use the inventory function to get more info about modules (instrument type, name, etc.)
 module_dict = create_module_inventory(module_array)
 
-# Set up the HVI trigger sync test
+# Initialize a test object using the module inventory we just created
 HVItriggersync_test = Test_HVItriggersync(module_dict, #dictionary of modules used in the test
                                           4, #master slot
                                           5, #slave slot
@@ -31,10 +33,12 @@ HVItriggersync_test.set_waveform("C:\\Users\\Public\\Documents\\Keysight\\SD1\\E
 configure_hardware(HVItriggersync_test)
 
 # Load the HVI
-configure_hvi(HVItriggersync_test, "TriggeringExample_modulesX2_V1_0.HVI")
+configure_hvi(HVItriggersync_test, "simpleHVIsync_4.HVI")
 HVItriggersync_test.hvi.start()
 
-# Send the trigger
-while(True):
+# Send the triggers
+for i in range(0,50):
     HVItriggersync_test.send_PXI_trigger_pulse(0)
-    time.sleep(.3)
+    time.sleep(.1)
+    
+HVItriggersync_test.hvi.stop()
