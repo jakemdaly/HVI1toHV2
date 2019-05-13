@@ -2,11 +2,15 @@ import sys
 sys.path.append('C:/Program Files (x86)/Keysight/SD1/Libraries/Python')
 import keysightSD1
 
+# This is a switch that will route the top-level script to the correct function to configure the test's hardware
 def configure_hardware(Test_obj):
     if Test_obj.test_key == "HVItriggersync":
         _HVItriggersync_hw_config(Test_obj)
+    else:
+        print("[ERROR] hardware_configurator.configure_hardware: Test object's test_key variable did not match a valid key")
 
 
+# This is the hardware configurator for the two module HVI trigger sync test
 def _HVItriggersync_hw_config(Test_obj):
 
 #    errors = []

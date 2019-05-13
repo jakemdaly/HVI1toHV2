@@ -26,16 +26,16 @@ class Test(ABC):
                 sd1_obj = keysightSD1.SD_AIN()
                 sd1_obj_id = sd1_obj.openWithSlot("", value[0], value[1])
                 if sd1_obj_id < 0:
-                    print("Error opening {}".format(key))
+                    print("[ERROR] Test.__init__: Error opening {}".format(key))
                 self._module_instances.append([sd1_obj, key, value])
             elif key[2] == '2':
                 sd1_obj = keysightSD1.SD_AOU()
                 sd1_obj_id = sd1_obj.openWithSlot("", value[0], value[1])
                 if sd1_obj_id < 0:
-                    print("Error opening {}".format(key))
+                    print("[ERROR] Test.__init__: Error opening {}".format(key))
                 self._module_instances.append([sd1_obj, key, value])
             else:
-                print("[Error in Test.__init__()] Did not properly parse instrument type string.")
+                print("[ERROR] Test.__init__: Did not properly parse instrument type string.")
 
     @abstractmethod
     def _associate(self):
@@ -61,9 +61,9 @@ class Test_HVItriggersync(Test):
     slave_channel = None
 
     # Attributes accessible through class methods
-    master_module = None #assigned with call to associate() method
-    slave_module = None #assigned with call to associate() method
-    waveform = None
+    master_module = keysightSD1.SD_AOU() #assigned with call to associate() method
+    slave_module = keysightSD1.SD_AOU() #assigned with call to associate() method
+    waveform = keysightSD1.SD_Wave()
     hvi = keysightSD1.SD_HVI()
 
     def __init__(self, module_dict, master_slot, slave_slot, master_channel, slave_channel, master_index=0, slave_index=1):
@@ -76,15 +76,16 @@ class Test_HVItriggersync(Test):
         self.slave_channel = slave_channel
         self._associate()
 
-    #this extracts the SD object in the _module_instances list, and assign a meaningful reference to them so the instances can be more easily manipulated
+    # This private method associates the master & slave modules (publicly accessible) of this test with the modules
+    # created in the base class
     def _associate(self):
         for module in self._module_instances:
-            if module[2][1] == self.master_slot: #if module was found in the master_slot, assign this object to master_module
+            if module[2][1] == self.master_slot:  # if a module was found in master_slot, assign it to master_module
                 self.master_module = module[0]
-            elif module[2][1] == self.slave_slot: #if module was found in the slave_slot, assign this object to slave_module
+            elif module[2][1] == self.slave_slot:  # if a module was found in slave_slot, assign it to slave_module
                 self.slave_module = module[0]
             else:
-                print("[Error in associate function] Module found in slot that was not specified as master or slave")
+                print("[ERROR] Associate function: Module found in slot that was not specified as master or slave")
 
     def send_PXI_trigger_pulse(self, PXI_line_nbr, delay=.2):
         time.sleep(delay)
@@ -94,8 +95,8 @@ class Test_HVItriggersync(Test):
 
     def set_waveform(self, filestr):
         wave = keysightSD1.SD_Wave()
-        wave.newFromFile(filestr)
-        self.waveform = wave
+        self.waveform = wave.newFromFile(filestr)
+        print("Loaded {} into HVI Trigger Sync Test's waveform".format(filestr))
 
     def set_hvi(self, filestr):
         self.hvi.open(filestr)
@@ -113,7 +114,7 @@ def create_module_inventory(module_array):
         module_type = temp_mod.getProductNameBySlot(mod[0], mod[1])
 
         if module_type < 0:
-            print("[ERROR] Could not find SD instrument at the specified location: Chassis {}, Slot {}".format(mod[0], mod[1]))
+            print("[ERROR] create_module_inventory: Could not find SD instrument at the specified location: Chassis {}, Slot {}".format(mod[0], mod[1]))
             sys.exit()
         else:
             print("Found {} in Chassis {}, Slot {}".format(module_type, mod[0], mod[1]))
