@@ -94,8 +94,7 @@ class Test_HVItriggersync(Test):
         self.master_module.PXItriggerWrite(PXI_line_nbr, 1)
 
     def set_waveform(self, filestr):
-        wave = keysightSD1.SD_Wave()
-        self.waveform = wave.newFromFile(filestr)
+        self.waveform.newFromFile(filestr)
         print("Loaded {} into HVI Trigger Sync Test's waveform".format(filestr))
 
     def set_hvi(self, filestr):
