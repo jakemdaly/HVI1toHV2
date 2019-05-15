@@ -33,7 +33,7 @@ HVItriggersync_test.set_waveform("C:\\Users\\Public\\Documents\\Keysight\\SD1\\E
 configure_hardware(HVItriggersync_test)
 
 # Load the HVI
-configure_hvi(HVItriggersync_test, "simpleHVIsync_4.HVI")
+configure_hvi(HVItriggersync_test, "simpleHVIsync_5.HVI")
 
 # Start the HVI
 HVItriggersync_test.hvi.start()
